@@ -147,10 +147,14 @@ export default function BioForgeForm() {
           </button>
         </form>
 
-        {error && <p className="mt-4 rounded-lg border border-rose-400/50 bg-rose-900/20 p-3 text-sm text-rose-200">{error}</p>}
+        {error && (
+          <p className="mt-4 rounded-lg border border-rose-400/50 bg-rose-900/20 p-3 text-sm text-rose-200" role="alert">
+            {error}
+          </p>
+        )}
 
         {loading && (
-          <section className="mt-7 space-y-3" aria-label="Loading bios">
+          <section className="mt-7 space-y-3" aria-label="Loading bios" aria-live="polite">
             {Array.from({ length: 5 }).map((_, index) => (
               <div key={index} className="h-16 animate-pulse rounded-xl border border-slate-700 bg-slate-900/60" />
             ))}

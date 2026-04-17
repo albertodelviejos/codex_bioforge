@@ -25,6 +25,24 @@ const sanitizeBios = (bios: string[]) =>
     .filter(Boolean)
     .slice(0, EXPECTED_BIO_COUNT);
 
+const parsePlainTextBios = (rawContent: string) => {
+  const lines = rawContent
+    .split("\n")
+    .map((line) => line.replace(/^\s*\d+[).:-]?\s*/, "").trim())
+    .filter(Boolean);
+
+  return sanitizeBios(lines);
+};
+
+const parseModelContent = (rawContent: string) => {
+  try {
+    const parsed = JSON.parse(rawContent) as LlmResponse;
+    return sanitizeBios(parsed.bios ?? []);
+  } catch {
+    return parsePlainTextBios(rawContent);
+  }
+};
+
 export async function POST(request: Request) {
   if (!process.env.OPENAI_API_KEY) {
     return NextResponse.json({ error: "Missing OPENAI_API_KEY." }, { status: 500 });
@@ -89,15 +107,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "No bios were returned. Please try again." }, { status: 502 });
     }
 
-    let parsed: LlmResponse;
-
-    try {
-      parsed = JSON.parse(rawContent) as LlmResponse;
-    } catch {
-      return NextResponse.json({ error: "Invalid response format from model. Please retry." }, { status: 502 });
-    }
-
-    const bios = sanitizeBios(parsed.bios ?? []);
+    const bios = parseModelContent(rawContent);
 
     if (bios.length !== EXPECTED_BIO_COUNT) {
       return NextResponse.json({ error: "Model returned incomplete bios. Please try again." }, { status: 502 });
